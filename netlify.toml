@@ -1,0 +1,4 @@
+[build]
+  base = "calendar-react"
+  publish = "dist"
+  command = "npm run build"
