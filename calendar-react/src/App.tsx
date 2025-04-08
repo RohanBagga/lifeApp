@@ -43,37 +43,54 @@ function App() {
   today.setHours(0, 0, 0, 0);
 
   useEffect(() => {
+    let gapiInitialized = false;
+  
     window.gapi.load("client", async () => {
-      await window.gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] });
-    });
-
-    const tokenClient = window.google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: async (response: any) => {
-        if (response.error) return console.error("Token error:", response);
-
-        setAccessToken(response.access_token);
-        await fetchCalendarEvents();
-      },
-    });
-
-    const signInBtn = document.getElementById("signin-btn");
-    signInBtn?.addEventListener("click", () => {
-      tokenClient.requestAccessToken({ prompt: "consent" });
-    });
-
-    const signOutBtn = document.getElementById("signout-btn");
-    signOutBtn?.addEventListener("click", () => {
-      if (accessToken) {
-        window.google.accounts.oauth2.revoke(accessToken, () => {
-          setAccessToken(null);
-          setEvents([]);
-          setFiltered([]);
-        });
-      }
+      await window.gapi.client.init({
+        discoveryDocs: [DISCOVERY_DOC],
+      });
+      gapiInitialized = true;
+  
+      // Set up token client **only after init**
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: async (response: any) => {
+          if (response.error) {
+            console.error("Token error:", response);
+            return;
+          }
+  
+          console.log("Access Token:", response.access_token);
+          setAccessToken(response.access_token);
+  
+          if (gapiInitialized) {
+            await fetchCalendarEvents();
+          } else {
+            console.warn("gapi client not ready yet!");
+          }
+        },
+      });
+  
+      const signInBtn = document.getElementById("signin-btn");
+      signInBtn?.addEventListener("click", () => {
+        tokenClient.requestAccessToken({ prompt: "consent" });
+      });
+  
+      const signOutBtn = document.getElementById("signout-btn");
+      signOutBtn?.addEventListener("click", () => {
+        if (accessToken) {
+          window.google.accounts.oauth2.revoke(accessToken, () => {
+            setAccessToken(null);
+            setEvents([]);
+            setFiltered([]);
+          });
+        }
+      });
     });
   }, []);
+  
+
 
   useEffect(() => {
     const query = search.toLowerCase().trim();
@@ -111,6 +128,7 @@ function App() {
   const fetchCalendarEvents = async () => {
     setLoading(true);
     try {
+      console.log("Fetching events...");
       const res = await window.gapi.client.calendar.events.list({
         calendarId: "primary",
         timeMin: new Date().toISOString(),
@@ -118,17 +136,19 @@ function App() {
         orderBy: "startTime",
         maxResults: 100,
       });
-
+  
       const allDayEvents =
         res.result.items?.filter((e: any) => !!e.start?.date) || [];
-
+  
+      console.log("Events fetched:", allDayEvents);
       setEvents(allDayEvents);
     } catch (error) {
-      console.error("Fetch failed:", error);
+      console.error("Fetch failed:", error); // 👈 show error clearly
     } finally {
       setLoading(false);
     }
   };
+  
 
   const getCountdownText = (rawDate: string) => {
     const date = new Date(rawDate);
