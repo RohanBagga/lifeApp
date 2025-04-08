@@ -42,7 +42,7 @@ function App() {
         if (response.error) return console.error("Token error:", response);
 
         setAccessToken(response.access_token);
-        await fetchCalendarEvents(response.access_token);
+        await fetchCalendarEvents();
       },
     });
 
@@ -96,7 +96,7 @@ function App() {
     setFiltered(results);
   }, [search, daysFilter, events]);
 
-  const fetchCalendarEvents = async (token: string) => {
+  const fetchCalendarEvents = async () => {
     setLoading(true);
     try {
       const res = await window.gapi.client.calendar.events.list({
