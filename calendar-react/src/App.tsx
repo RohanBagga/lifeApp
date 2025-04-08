@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Box, Paper, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import "./App.css";
 
 const CLIENT_ID = "1032345992294-48boa203ightsaf4o186tqgtu8c13l4n.apps.googleusercontent.com";
@@ -132,58 +133,135 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>📅 My Calendar Dashboard</h1>
-
-      {!accessToken && <button id="signin-btn">Sign in with Google</button>}
-      {accessToken && <button id="signout-btn">Sign out</button>}
-
-      {accessToken && (
-        <>
-          <div className="controls">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search title..."
-            />
-            <select
-              value={daysFilter}
-              onChange={(e) => setDaysFilter(e.target.value)}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#f4f4f4",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        py: 4,
+        px: 2,
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          width: "100%",
+          maxWidth: 600,
+          p: 4,
+          borderRadius: 3,
+        }}
+      >
+        <Typography variant="h4" gutterBottom sx={{ textAlign: "center" }}>
+          📅 My Calendar Dashboard
+        </Typography>
+  
+        {!accessToken ? (
+          <Button
+            variant="contained"
+            id="signin-btn"
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            Sign in with Google
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            id="signout-btn"
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            Sign out
+          </Button>
+        )}
+  
+        {accessToken && (
+          <>
+            {/* Controls */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                mb: 3,
+              }}
             >
-              <option value="all">All</option>
-              <option value="7">Next 7 days</option>
-              <option value="30">Next 30 days</option>
-            </select>
-            <button onClick={() => setCompact((c) => !c)}>
-              Toggle Compact Mode
-            </button>
-          </div>
-
-          {loading ? (
-            <p>🔄 Loading events...</p>
-          ) : filtered.length === 0 ? (
-            <p>No matching all-day events.</p>
-          ) : (
-            <div className="event-list">
-              {filtered.map((event) => (
-                <div className="event-card" key={event.summary + event.start.date}>
-                  {compact ? (
-                    <strong>{event.summary} — {getCountdownText(event.start.date)}</strong>
-                  ) : (
-                    <>
-                      <div className="title">{event.summary}</div>
-                      <div className="date">📅 {new Date(event.start.date).toDateString()}</div>
-                      <div className="countdown">⏳ {getCountdownText(event.start.date)}</div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+              <TextField
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search title..."
+                fullWidth
+              />
+                <FormControl fullWidth>
+                  <InputLabel>Filter</InputLabel>
+                <Select
+                  value={daysFilter}
+                  onChange={(e) => setDaysFilter(e.target.value)}
+                  label="Filter"
+                >
+                  <MenuItem value="all">All</MenuItem>
+                  <MenuItem value="7">Next 7 days</MenuItem>
+                  <MenuItem value="30">Next 30 days</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                onClick={() => setCompact((c) => !c)}
+                fullWidth
+              >
+                Toggle Compact Mode
+              </Button>
+            </Box>
+  
+            {/* Event List */}
+            {loading ? (
+              <Typography align="center">🔄 Loading events...</Typography>
+            ) : filtered.length === 0 ? (
+              <Typography align="center">No matching all-day events.</Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {filtered.map((event) => {
+                  const title = event.summary || "Untitled";
+                  const date = event.start.date;
+                  const countdown = getCountdownText(date);
+  
+                  return (
+                    <Paper
+                      key={title + date}
+                      elevation={1}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: "white",
+                      }}
+                    >
+                      {compact ? (
+                        <Typography variant="body1" fontWeight="bold">
+                          {title} — {countdown}
+                        </Typography>
+                      ) : (
+                        <>
+                          <Typography variant="h6">{title}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            📅 {new Date(date).toDateString()}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            ⏳ {countdown}
+                          </Typography>
+                        </>
+                      )}
+                    </Paper>
+                  );
+                })}
+              </Box>
+            )}
+          </>
+        )}
+      </Paper>
+    </Box>
+  );  
 }
 
 export default App;
